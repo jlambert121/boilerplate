@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"os"
 	"path"
@@ -43,10 +44,10 @@ func ProcessTemplateWithContext(ctx context.Context, options, rootOpts *options.
 		workingDir, templateFolder, downloadErr := getterhelper.DownloadTemplatesToTemporaryFolder(options.TemplateURL)
 
 		defer func() {
-			util.Logger.Printf("Cleaning up working directory.")
+			slog.Default().Info("Cleaning up working directory.")
 
 			if rmErr := os.RemoveAll(workingDir); rmErr != nil {
-				util.Logger.Printf("Failed to clean up working directory %s: %v", workingDir, rmErr)
+				slog.Default().Info(fmt.Sprintf("Failed to clean up working directory %s: %v", workingDir, rmErr))
 			}
 		}()
 
@@ -133,7 +134,7 @@ func processPartials(ctx context.Context, partials []string, opts *options.Boile
 func processHooks(ctx context.Context, hooks []variables.Hook, opts *options.BoilerplateOptions, vars map[string]any) error {
 	if len(hooks) == 0 || opts.NoHooks {
 		if opts.NoHooks {
-			util.Logger.Printf("Hooks are disabled, skipping %d hook(s)", len(hooks))
+			slog.Default().Info(fmt.Sprintf("Hooks are disabled, skipping %d hook(s)", len(hooks)))
 		}
 
 		return nil
@@ -148,7 +149,7 @@ func processHooks(ctx context.Context, hooks []variables.Hook, opts *options.Boi
 		skip, err := shouldSkipHook(ctx, hook, opts, vars)
 		if err != nil || skip {
 			if skip {
-				util.Logger.Printf("Skipping hook with command '%s'", hook.Command)
+				slog.Default().Info(fmt.Sprintf("Skipping hook with command '%s'", hook.Command))
 			}
 
 			if err != nil {
@@ -268,11 +269,11 @@ func handlePreviousHookConfirmation(hookKey string, hookAnswers map[string]bool,
 	}
 
 	if seen && !confirmed {
-		util.Logger.Printf("Skipping hook (previously declined)")
+		slog.Default().Info("Skipping hook (previously declined)")
 		return false
 	}
 
-	util.Logger.Printf("Executing hook (%s)", "previously confirmed or all confirmed")
+	slog.Default().Info(fmt.Sprintf("Executing hook (%s)", "previously confirmed or all confirmed"))
 
 	return true
 }
@@ -290,19 +291,19 @@ func handleHookUserConfirmation(hookDetails string, hookKey string, hookAnswers 
 	case util.UserResponseYes:
 		hookAnswers[hookKey] = true
 
-		util.Logger.Printf("Executing hook (user confirmed)")
+		slog.Default().Info("Executing hook (user confirmed)")
 
 		return true, false, nil // should execute, don't set executeAll
 	case util.UserResponseAll:
 		hookAnswers[hookKey] = true
 
-		util.Logger.Printf("Executing hook (user confirmed all)")
+		slog.Default().Info("Executing hook (user confirmed all)")
 
 		return true, true, nil // should execute, set executeAll
 	case util.UserResponseNo:
 		hookAnswers[hookKey] = false
 
-		util.Logger.Printf("Skipping hook (user declined)")
+		slog.Default().Info("Skipping hook (user declined)")
 
 		return false, false, nil // don't execute, don't set executeAll
 	}
@@ -318,11 +319,11 @@ func generateHookKey(hookDetails string) string {
 
 // printHookDetails prints the details of a hook that will be executed
 func printHookDetails(hookDetails string) {
-	util.Logger.Printf("Hook details:")
+	slog.Default().Info("Hook details:")
 
 	lines := strings.SplitSeq(hookDetails, "\n")
 	for line := range lines {
-		util.Logger.Printf("  %s", line)
+		slog.Default().Info(fmt.Sprintf("  %s", line))
 	}
 }
 
@@ -391,7 +392,7 @@ func shouldSkipHook(ctx context.Context, hook *variables.Hook, opts *options.Boi
 		return false, err
 	}
 
-	util.Logger.Printf("Skip attribute for hook with command '%s' evaluated to '%s'", hook.Command, rendered)
+	slog.Default().Info(fmt.Sprintf("Skip attribute for hook with command '%s' evaluated to '%s'", hook.Command, rendered))
 
 	return rendered == "true", nil
 }
@@ -434,7 +435,7 @@ func processDependency(
 				return err
 			}
 
-			util.Logger.Printf("Processing dependency %s, with template folder %s and output folder %s", dependency.Name, dependencyOptions.TemplateFolder, dependencyOptions.OutputFolder)
+			slog.Default().Info(fmt.Sprintf("Processing dependency %s, with template folder %s and output folder %s", dependency.Name, dependencyOptions.TemplateFolder, dependencyOptions.OutputFolder))
 
 			return ProcessTemplateWithContext(ctx, dependencyOptions, opts, dependency)
 		}
@@ -468,7 +469,7 @@ func processDependency(
 			return doProcess(originalVars)
 		}
 	} else {
-		util.Logger.Printf("Skipping dependency %s", dependency.Name)
+		slog.Default().Info(fmt.Sprintf("Skipping dependency %s", dependency.Name))
 		return nil
 	}
 }
@@ -682,7 +683,7 @@ func shouldSkipDependency(ctx context.Context, dependency *variables.Dependency,
 		return false, err
 	}
 
-	util.Logger.Printf("Skip attribute for dependency %s evaluated to '%s'", dependency.Name, rendered)
+	slog.Default().Info(fmt.Sprintf("Skip attribute for dependency %s evaluated to '%s'", dependency.Name, rendered))
 
 	return rendered == "true", nil
 }
@@ -696,7 +697,7 @@ func processTemplateFolder(
 	variables map[string]any,
 	partials []string,
 ) error {
-	util.Logger.Printf("Processing templates in %s and outputting generated files to %s", opts.TemplateFolder, opts.OutputFolder)
+	slog.Default().Info(fmt.Sprintf("Processing templates in %s and outputting generated files to %s", opts.TemplateFolder, opts.OutputFolder))
 
 	// Process and render skip files and engines before walking so we only do the rendering operation once.
 	processedSkipFiles, err := processSkipFiles(ctx, config.SkipFiles, opts, variables)
@@ -714,7 +715,7 @@ func processTemplateFolder(
 
 		switch {
 		case shouldSkipPath(path, opts, processedSkipFiles):
-			util.Logger.Printf("Skipping %s", path)
+			slog.Default().Info(fmt.Sprintf("Skipping %s", path))
 			return nil
 		case util.IsDir(path):
 			return createOutputDir(ctx, path, opts, variables)
@@ -754,7 +755,7 @@ func createOutputDir(ctx context.Context, dir string, opts *options.BoilerplateO
 		return err
 	}
 
-	util.Logger.Printf("Creating folder %s", destination)
+	slog.Default().Info(fmt.Sprintf("Creating folder %s", destination))
 
 	return os.MkdirAll(destination, defaultDirPerm)
 }
@@ -800,7 +801,7 @@ func copyFile(ctx context.Context, file string, opts *options.BoilerplateOptions
 		return err
 	}
 
-	util.Logger.Printf("Copying %s to %s", file, destination)
+	slog.Default().Info(fmt.Sprintf("Copying %s to %s", file, destination))
 
 	return util.CopyFile(file, destination)
 }

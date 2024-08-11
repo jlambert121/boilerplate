@@ -3,6 +3,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"net/url"
 	"os"
 	"path"
@@ -196,7 +197,7 @@ func LoadBoilerplateConfig(opts *options.BoilerplateOptions) (*BoilerplateConfig
 
 	switch {
 	case util.PathExists(configPath):
-		util.Logger.Printf("Loading boilerplate config from %s", configPath)
+		slog.Default().Info(fmt.Sprintf("Loading boilerplate config from %s", configPath))
 
 		bytes, err := os.ReadFile(configPath)
 		if err != nil {
@@ -205,7 +206,7 @@ func LoadBoilerplateConfig(opts *options.BoilerplateOptions) (*BoilerplateConfig
 
 		return ParseBoilerplateConfig(bytes)
 	case opts.OnMissingConfig == options.Ignore:
-		util.Logger.Printf("Warning: boilerplate config file not found at %s. The %s flag is set, so ignoring. Note that no variables will be available while generating.", configPath, options.OptMissingConfigAction)
+		slog.Default().Info(fmt.Sprintf("Warning: boilerplate config file not found at %s. The %s flag is set, so ignoring. Note that no variables will be available while generating.", configPath, options.OptMissingConfigAction))
 		return &BoilerplateConfig{}, nil
 	default:
 		// If the template URL is similar to a git URL, surface in error message that there may be a misspelling/typo.

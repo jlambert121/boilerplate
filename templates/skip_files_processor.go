@@ -2,6 +2,8 @@ package templates
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"path/filepath"
 
 	zglob "github.com/mattn/go-zglob"
@@ -9,7 +11,6 @@ import (
 	"github.com/gruntwork-io/boilerplate/errors"
 	"github.com/gruntwork-io/boilerplate/options"
 	"github.com/gruntwork-io/boilerplate/render"
-	"github.com/gruntwork-io/boilerplate/util"
 	"github.com/gruntwork-io/boilerplate/variables"
 )
 
@@ -81,11 +82,11 @@ func skipFileIfCondition(ctx context.Context, skipFile variables.SkipFile, opts 
 	// TODO: logger-debug - switch to debug
 	switch {
 	case skipFile.Path != "":
-		util.Logger.Printf("If attribute for SkipFile Path %s evaluated to '%s'", skipFile.Path, rendered)
+		slog.Default().Info(fmt.Sprintf("If attribute for SkipFile Path %s evaluated to '%s'", skipFile.Path, rendered))
 	case skipFile.NotPath != "":
-		util.Logger.Printf("If attribute for SkipFile NotPath %s evaluated to '%s'", skipFile.NotPath, rendered)
+		slog.Default().Info(fmt.Sprintf("If attribute for SkipFile NotPath %s evaluated to '%s'", skipFile.NotPath, rendered))
 	default:
-		util.Logger.Printf("WARN: SkipFile has no path or not_path!")
+		slog.Default().Info("WARN: SkipFile has no path or not_path!")
 	}
 
 	return rendered == "true", nil
@@ -93,10 +94,10 @@ func skipFileIfCondition(ctx context.Context, skipFile variables.SkipFile, opts 
 
 func debugLogForMatchedPaths(sourcePath string, paths []string, directiveName string, directiveAttribute string) {
 	// TODO: logger-debug - switch to debug
-	util.Logger.Printf("Following paths were picked up by %s attribute for %s (%s):", directiveAttribute, directiveName, sourcePath)
+	slog.Default().Info(fmt.Sprintf("Following paths were picked up by %s attribute for %s (%s):", directiveAttribute, directiveName, sourcePath))
 
 	for _, path := range paths {
-		util.Logger.Printf("\t- %s", path)
+		slog.Default().Info(fmt.Sprintf("\t- %s", path))
 	}
 }
 
@@ -117,7 +118,7 @@ func renderGlobPath(ctx context.Context, opts *options.BoilerplateOptions, path 
 	rawMatchedPaths, err := zglob.Glob(globPath)
 	if err != nil {
 		// TODO: logger-debug - switch to debug
-		util.Logger.Printf("ERROR: could not glob %s", globPath)
+		slog.Default().Info(fmt.Sprintf("ERROR: could not glob %s", globPath))
 		return nil, errors.WithStackTrace(err)
 	}
 	// Canonicalize the matched paths prior to storage

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"log/slog"
 	"maps"
 	"sort"
 
@@ -14,7 +15,6 @@ import (
 	pkgErrors "github.com/gruntwork-io/boilerplate/errors"
 	"github.com/gruntwork-io/boilerplate/options"
 	"github.com/gruntwork-io/boilerplate/render"
-	"github.com/gruntwork-io/boilerplate/util"
 	"github.com/gruntwork-io/boilerplate/variables"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pterm/pterm"
@@ -189,10 +189,10 @@ func getVariable(variable variables.Variable, opts *options.BoilerplateOptions) 
 
 	switch {
 	case valueSpecifiedInVars:
-		util.Logger.Printf("Using value specified via command line options for variable '%s': %s", variable.FullName(), valueFromVars)
+		slog.Default().Info(fmt.Sprintf("Using value specified via command line options for variable '%s': %s", variable.FullName(), valueFromVars))
 		return valueFromVars, nil
 	case opts.NonInteractive && variable.Default() != nil:
-		util.Logger.Printf("Using default value for variable '%s': %v", variable.FullName(), variable.Default())
+		slog.Default().Info(fmt.Sprintf("Using default value for variable '%s': %v", variable.FullName(), variable.Default()))
 		return variable.Default(), nil
 	case opts.NonInteractive:
 		return nil, pkgErrors.WithStackTrace(MissingVariableWithNonInteractiveMode(variable.FullName()))
@@ -245,7 +245,7 @@ func getVariableFromUser(variable variables.Variable, invalidEntries variables.I
 
 	if value == "" {
 		// TODO: what if the user wanted an empty string instead of the default?
-		util.Logger.Printf("Using default value for variable '%s': %v", variable.FullName(), variable.Default())
+		slog.Default().Info(fmt.Sprintf("Using default value for variable '%s': %v", variable.FullName(), variable.Default()))
 		return variable.Default(), nil
 	}
 

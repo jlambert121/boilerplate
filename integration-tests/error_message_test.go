@@ -24,6 +24,7 @@ func TestMisspelledTemplateURLErrorMessage(t *testing.T) {
 		"--output-folder",
 		outputFolder,
 		"--non-interactive",
+		"--silent",
 	}
 	runErr := app.Run(args)
 	require.Error(t, runErr, errors.PrintErrorWithStackTrace(runErr))

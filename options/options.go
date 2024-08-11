@@ -21,6 +21,7 @@ const OptMissingConfigAction = "missing-config-action"
 const OptNoHooks = "no-hooks"
 const OptNoShell = "no-shell"
 const OptDisableDependencyPrompt = "disable-dependency-prompt"
+const OptSilent = "silent"
 
 // BoilerplateOptions represents the command-line options for the boilerplate app
 type BoilerplateOptions struct {
@@ -36,6 +37,7 @@ type BoilerplateOptions struct {
 	NoShell                 bool
 	DisableDependencyPrompt bool
 	ExecuteAllShellCommands bool
+	Silent                  bool
 }
 
 // Validate that the options have reasonable values and return an error if they don't
@@ -100,6 +102,7 @@ func ParseOptions(cliContext *cli.Context) (*BoilerplateOptions, error) {
 		DisableDependencyPrompt: cliContext.Bool(OptDisableDependencyPrompt),
 		ExecuteAllShellCommands: false,
 		ShellCommandAnswers:     make(map[string]bool),
+		Silent:                  cliContext.Bool(OptSilent),
 	}
 
 	if err := options.Validate(); err != nil {

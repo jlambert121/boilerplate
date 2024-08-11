@@ -2,6 +2,8 @@ package util
 
 import (
 	"context"
+	"fmt"
+	"log/slog"
 	"os"
 	"os/exec"
 	"strings"
@@ -18,7 +20,7 @@ func RunShellCommandAndGetOutput(workingDir string, envVars []string, argslist .
 func RunShellCommandAndGetOutputWithContext(ctx context.Context, workingDir string, envVars []string, argslist ...string) (string, error) {
 	command := argslist[0]
 	args := argslist[1:]
-	Logger.Printf("Running command: %s %s", command, strings.Join(args, " "))
+	slog.Default().Info(fmt.Sprintf("Running command: %s %s", command, strings.Join(args, " ")))
 
 	cmd := exec.CommandContext(ctx, command, args...)
 
@@ -43,7 +45,7 @@ func RunShellCommand(workingDir string, envVars []string, command string, args .
 
 // RunShellCommandWithContext runs the given shell command with the given environment variables and arguments in the given working directory
 func RunShellCommandWithContext(ctx context.Context, workingDir string, envVars []string, command string, args ...string) error {
-	Logger.Printf("Running command: %s %s", command, strings.Join(args, " "))
+	slog.Default().Info(fmt.Sprintf("Running command: %s %s", command, strings.Join(args, " ")))
 
 	cmd := exec.CommandContext(ctx, command, args...)
 
