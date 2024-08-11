@@ -3,14 +3,13 @@ package util
 import (
 	"os"
 	"os/exec"
-	"strings"
 
 	"github.com/gruntwork-io/boilerplate/errors"
 )
 
 // Run the given shell command with the given environment variables and arguments in the given working directory
 func RunShellCommandAndGetOutput(workingDir string, envVars []string, command string, args ...string) (string, error) {
-	Logger.Printf("Running command: %s %s", command, strings.Join(args, " "))
+	// Logger.Info(fmt.Sprintf("Running command: %s %s", command, strings.Join(args, " ")))
 
 	cmd := exec.Command(command, args...)
 
@@ -28,7 +27,7 @@ func RunShellCommandAndGetOutput(workingDir string, envVars []string, command st
 
 // Run the given shell command with the given environment variables and arguments in the given working directory
 func RunShellCommand(workingDir string, envVars []string, command string, args ...string) error {
-	Logger.Printf("Running command: %s %s", command, strings.Join(args, " "))
+	// Logger.Info(fmt.Sprintf("Running command: %s %s", command, strings.Join(args, " ")))
 
 	cmd := exec.Command(command, args...)
 
